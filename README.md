@@ -1,7 +1,5 @@
-# Tauri + React + Typescript
+# Pomodoro app 
 
-This template should help get you started developing with Tauri, React and Typescript in Vite.
+The application is still in developpement, if you want to contribute feel free to add an issue
 
-## Recommended IDE Setup
 
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)

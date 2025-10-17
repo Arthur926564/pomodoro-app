@@ -1,24 +1,98 @@
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  font-family: sans-serif;
+/* App.css */
+
+:root {
+  --bg-color: #1e1e2f;
+  --text-color: #e0e0e0;
+  --accent-color: #ff6b6b;
+  --accent-color-alt: #4ecdc4;
+  --font-main: "Inter", system-ui, sans-serif;
+  --accent-color-settings: #27273d;
+  --accent-color-settings-alt: #e0e0e0;
 }
 
+body {
+  margin: 0;
+  font-family: var(--font-main);
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+/* 🧱 Main Layout */
+.container {
+  text-align: center;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2rem 3rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  max-width: 400px;
+  width: 100%;
+}
+
+/* 🕓 Timer display */
 .timer-display {
   font-size: 4rem;
-  margin: 1rem;
+  font-weight: 600;
+  margin: 1.0rem 0;
+  color: var(--accent-color);
 }
 
+/* 🧭 State label (the “Work Time!”, “Break Time!”) */
+h1:first-of-type {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+h1:nth-of-type(2) {
+  font-size: 1.2rem;
+  font-weight: 400;
+  color: var(--accent-color-alt);
+  margin-bottom: 1rem;
+}
+
+/* 🎛 Buttons */
 .button-row {
   display: flex;
+  justify-content: center;
   gap: 1rem;
 }
 
-button {
-  padding: 0.5rem 1rem;
-  font-size: 1.2rem;
+
+.button-row button {
+  background-color: var(--accent-color);
+  border: none;
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border-radius: 0.5rem;
   cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.2s ease-in-out;
+}
+
+.button-row button:hover {
+  background-color: #ff8787;
+}
+
+.button-row button:disabled {
+  background-color: gray;
+  cursor: not-allowed;
+}
+
+.settings-button {
+  background-color: #3c3c5c;
+  border: 2px solid var(--accent-color-settings);
+  color: var(--accent-color-settings-alt);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.settings-button:hover {
+  background-color: var(--accent-color);
+  color: black;
 }

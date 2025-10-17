@@ -1,36 +1,103 @@
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
+import { SettingsModal } from "./components/SettingsModal";
 import {
   sendNotification,
 } from '@tauri-apps/plugin-notification';
 
 function App() {
-  const WORK_DURATION = 25 * 60; // 25 minutes in seconds
+  const WORK_DURATION_INITIAL = 1 * 20; // 25 minutes in seconds
+  const BREAK_DURATION_INITIAL = 5 * 60;
+  const NUMBER_ROUND = 6;
+  type TimerState = "IDLE" | "RUNNING" | "BREAK" | "PAUSED";
 
-  const [secondsLeft, setSecondsLeft] = useState(WORK_DURATION);
-  const [isRunning, setIsRunning] = useState(false);
-  const intervalRef = useRef<number | null>(null);
-  const [isBreak, setIsBreak] = useState(false);
+  const [workDuration, setWorkDuration] = useState(WORK_DURATION_INITIAL)
+  const [breakDuration, setBreakDuration] = useState(BREAK_DURATION_INITIAL)
+  const [showSettings, setShowSettings] = useState(false)
 
-  useEffect(() => {
-    if (isRunning) {
-      intervalRef.current = window.setInterval(() => {
-        setSecondsLeft((prev) => {
-          if (prev <= 1) {
-            clearInterval(intervalRef.current!);
-            setIsRunning(false);
-            notifyEnd();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
+  const [secondsLeft, setSecondsLeft] = useState(WORK_DURATION_INITIAL);
+  const  [numberRoundLeft, setNumberRoundLeft] = useState(NUMBER_ROUND);
+  const [state, setState] = useState<TimerState>("IDLE");
+  const intervalRef = useRef<number | null>(null); 
 
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [isRunning]);
+
+  const stateLabels: Record<TimerState, string> = {
+  	IDLE: "Ready to Start",
+  	RUNNING: "Work Time!",
+  	BREAK: "Take a Break ☕",
+  	PAUSED: "Paused ⏸️",
+  	};
+
+
+	const handleSaveSettings = () => {
+    	console.log("Saved settings:", workDuration, breakDuration);
+    	setShowSettings(false);
+    	// You can also persist settings here later (e.g., Tauri store)
+  	};
+
+  const handlePhaseEnd = () => {
+	  if (intervalRef.current) clearInterval(intervalRef.current)
+	
+  	notifyEnd();
+
+  	switch (state) {
+    	case "RUNNING":
+      		if (numberRoundLeft > 0) {
+        		setState("BREAK")
+        		setSecondsLeft(breakDuration * 60)
+				setNumberRoundLeft(numberRoundLeft - 1)
+      		} else {
+        		setState("IDLE");
+        		setSecondsLeft(workDuration * 60)
+				setNumberRoundLeft(numberRoundLeft)
+      		}
+      		break;
+
+    	case "BREAK":
+      		setState("RUNNING");
+      		setSecondsLeft(workDuration * 60);
+      		break;
+
+    	default:
+      		setState("IDLE");
+      		setSecondsLeft(workDuration * 60);
+      		break;
+  }
+};
+
+  useEffect(() => { console.log(state);
+	if (intervalRef.current) clearInterval(intervalRef.current)
+
+  	if (state === "RUNNING" || state === "BREAK") {
+    	intervalRef.current = window.setInterval(() => {
+      	setSecondsLeft((prev) => {
+        	if (prev <= 1) {
+          	clearInterval(intervalRef.current!);
+          	handlePhaseEnd();
+          	return 0;
+        	}
+        	return prev - 1;
+      	});
+    	}, 1000);
+  	}
+
+  	return () => {
+    	if (intervalRef.current) clearInterval(intervalRef.current);
+  	};
+	}, [state]); // rerun when state changes
+
+	useEffect(() => {
+  		if (state === "IDLE") {
+    		setSecondsLeft(workDuration * 60);
+  		}
+	}, [workDuration, state]);
+
+	useEffect(() => {
+  		if (state === "BREAK") {
+    		setSecondsLeft(breakDuration * 60);
+  		}
+	}, [breakDuration, state]);
+
 
   const notifyEnd = () => {
 	sendNotification({title: 'Pomodoro Finished', body : 'Time to take a break'});
@@ -42,26 +109,42 @@ function App() {
     return `${m}:${s}`;
   };
 
-  const startTimer = () => setIsRunning(true);
+  const startTimer = () => setState("RUNNING");
   const pauseTimer = () => {
-    setIsRunning(false);
+	  setState("PAUSED")
     if (intervalRef.current) clearInterval(intervalRef.current);
   };
   const resetTimer = () => {
-    pauseTimer();
-    setSecondsLeft(WORK_DURATION);
+	setState("IDLE");
+    setSecondsLeft(workDuration * 60);
+	setNumberRoundLeft(NUMBER_ROUND);
   };
 
   return (
     <main className="container">
-      <h1>Pomodoro Timer</h1>
+      	<h1>Pomodoro Timer</h1>
+		<button 
+		className="settings-button"
+		onClick={() => setShowSettings(true)}>⚙️ Settings</button>
+		<SettingsModal
+        show={showSettings}
+        onClose={() => setShowSettings(false)}
+		numberRounds={numberRoundLeft}
+        workDuration={workDuration}
+        breakDuration={breakDuration}
+        setWorkDuration={setWorkDuration}
+        setBreakDuration={setBreakDuration}
+		setNumberRounds={setNumberRoundLeft}
+        onSave={handleSaveSettings}
+      />
+		<h1>{stateLabels[state]}</h1>
+	  	<h1>{"rounds left : " + numberRoundLeft}</h1>
+      	<div className="timer-display">
+        	<h2>{formatTime(secondsLeft)}</h2>
+      	</div>
 
-      <div className="timer-display">
-        <h2>{formatTime(secondsLeft)}</h2>
-      </div>
-
-      <div className="button-row">
-        {!isRunning ? (
+      	<div className="button-row">
+        {state=="PAUSED" || state=="IDLE" ? (
           <button onClick={startTimer}>Start</button>
         ) : (
           <button onClick={pauseTimer}>Pause</button>
@@ -73,58 +156,3 @@ function App() {
 }
 
 export default App;
-
-//
-//
-//
-// import { useState } from "react";
-// import reactLogo from "./assets/react.svg";
-// import { invoke } from "@tauri-apps/api/core";
-// import "./App.css";
-//
-// function App() {
-//   const [greetMsg, setGreetMsg] = useState("");
-//   const [name, setName] = useState("");
-//
-//   async function greet() {
-//     // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-//     setGreetMsg(await invoke("greet", { name }));
-//   }
-//
-//   return (
-//     <main className="container">
-//       <h1>Welcome to Tauri + React</h1>
-//
-//       <div className="row">
-//         <a href="https://vite.dev" target="_blank">
-//           <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-//         </a>
-//         <a href="https://tauri.app" target="_blank">
-//           <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-//         </a>
-//         <a href="https://react.dev" target="_blank">
-//           <img src={reactLogo} className="logo react" alt="React logo" />
-//         </a>
-//       </div>
-//       <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-//
-//       <form
-//         className="row"
-//         onSubmit={(e) => {
-//           e.preventDefault();
-//           greet();
-//         }}
-//       >
-//         <input
-//           id="greet-input"
-//           onChange={(e) => setName(e.currentTarget.value)}
-//           placeholder="Enter a name..."
-//         />
-//         <button type="submit">Greet</button>
-//       </form>
-//       <p>{greetMsg}</p>
-//     </main>
-//   );
-// }
-//
-// export default App;
