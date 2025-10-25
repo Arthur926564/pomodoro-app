@@ -34,9 +34,9 @@ body {
 
 /* 🕓 Timer display */
 .timer-display {
-  font-size: 4rem;
+  font-size: 3rem;
   font-weight: 600;
-  margin: 1.0rem 0;
+  margin: 0.0rem 0;
   color: var(--accent-color);
 }
 

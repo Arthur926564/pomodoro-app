@@ -125,7 +125,7 @@ function App() {
 		}
 		await db.execute(
 			"INSERT INTO pomodoro_sessions (session_type, duration_seconds) VALUES ($1, $2)",
-			["work", workDuration]
+			["work", workDuration * 60]
 		);
 		const sessions = await db.select(
 			"SELECT session_type, duration_seconds, timestamp FROM pomodoro_sessions"
@@ -180,7 +180,6 @@ function App() {
 				onSave={handleSaveSettings}
 			/>
 			<h1>{stateLabels[state]}</h1>
-			<h1>{"rounds left : " + totalMinutes}</h1>
 			<div className="timer-display">
 				<h2>{formatTime(secondsLeft)}</h2>
 			</div>
@@ -194,6 +193,7 @@ function App() {
 				<button onClick={resetTimer}>Reset</button>
 			</div>
 			<div className="stats-panel">
+				<p>{"rounds left : " + numberRoundLeft}</p>
   				<h3>Study Stats</h3>
   				<p>Total Study Time: {formatTime(totalMinutes)}</p>
 				<p>Average study Time: {formatTime(meanBySession)}</p>
